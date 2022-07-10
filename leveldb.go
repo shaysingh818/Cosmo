@@ -2,9 +2,16 @@ package main
 
 import (
 	"fmt"
-	"sync"
-	"github.com/syndtr/goleveldb/leveldb"
 )
+
+
+
+func CheckError(err error) {
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 
 /* level db functions */
 func (a *App) PutKey(key []byte, content []byte) bool {
@@ -16,19 +23,17 @@ func (a *App) PutKey(key []byte, content []byte) bool {
     if err != nil {
         return false
     }
+	fmt.Println("Wrote key value")
     fmt.Println("Stored file in db")
     return true
 }
 
 
-func (a *App) RetrieveKey(key []byte) {
+func (a *App) RetrieveKey(key []byte) []byte {
     //csm
-    a.mu.Lock()
-    defer a.mu.Unlock()
-
     data, err := a.db.Get([]byte(key), nil)
     CheckError(err)
-    fmt.Println(string(data))
+	return data
 }
 
 
@@ -45,21 +50,21 @@ func (a *App) DeleteKey(key []byte) bool {
 }
 
 
-func (a *App) ViewKeys() bool {
-
+func (a *App) ViewKeys() []string {
+	// retrieve all keys
+	var keys []string
     iter := a.db.NewIterator(nil, nil)
     for iter.Next() {
         key := iter.Key()
-        value := iter.Value()
-        fmt.Println("%v : %v", key, value)
+		keys = append(keys, key)
     }
 
     iter.Release()
     err := iter.Error()
     if err != nil {
-        return false
+		fmt.Println("Something went wrong")
     }
 
-    return true
+    return keys
 }
 
